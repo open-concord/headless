@@ -14,26 +14,23 @@
 /** concord */
 #include <concord/Node.h>
 
+/** mapping */
+// template
+struct thread {
+  pid_t pid;
+  struct shm {
+    key_t key;
+    size_t size;
+  };
+  *Node node;
+};
+// actual mapping
+std::map<key_t, thread> threads;
+
 /** Exposed Functions */
 void Spawn(char kChar);
 void Send(pid_t pid, int sig);
 void Stop(pid_t pid);
-
-/** Configurable Signal Mapping (Incomplete) */
-struct dataExt { // data extension
-  int shmid;
-  size_t size;
-};
-
-struct threadExt {
-  dataExt self; // information containing the PID of the thread
-  std::map<int, void(*handle)(Node)> sigHndl; // signalInt mapped to signal handle
-};
-
-/** You should define the sigExt in your implementation */
-std::map<int, sigExt> threadMap;
-
-/** END Configurable Signal Mapping (Incomplete) */
 
 /** Lower-Level (DO NOT CALL) */
 void Worker(key_t key);

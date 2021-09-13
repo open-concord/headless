@@ -16,3 +16,7 @@
           }
         }
       }
+- 09/13/21 .2
+  - Realized that data storage was unnecessary abstraction, removed mostly everything pertaining to that
+  - <thread>.shm and <thread>.node should be set by the calling process
+  - I feel like I'm close to getting a really elegant solution to the key vs pid mapping for thread, but I can't get it rn

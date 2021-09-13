@@ -35,14 +35,15 @@ void Worker(key_t key) {
   act.sa_sigaction = Handle;
   act.sa_flags = SA_SIGINFO; // ask for siginfo
 
-  // establish shm + store pid in shm
-  int shmid = shmget(key, sizeof(&pid), IPC_CREAT);
+  // establish shm
+  auto threads[key].shm = selfSHM; // shortcut
+  int shmid = shmget(key, selfSHM.size, IPC_CREAT);
+  // storing PID in shm, so that the calling process call log it
   pid_t *shmptr = (pid_t *) shmat(shmid, NULL, 0);
   *shmptr = pid;
 
   // document info in mem
-  sigMap[key].self.shmid = shmid;
-  sigMap[key].self.size = sizeof(&pid);
+  threads[key].pid = pid;
 
   // finally just running a Node instance
 
@@ -50,10 +51,16 @@ void Worker(key_t key) {
 
 static void Handle(int sig, siginfo_t *siginfo, void *context) {
   // pulling the data
-  int shmid = shmget(sigMap[sig].info.key, sigMap[sig].info.size, IPC_CREAT);
-  Node *data = (Node*) shmat(shmid,(void*)0,0);
-  // handling
-  sigMap[sig].handle(*data);
+  Node *nodeInstance;
+  for (auto const& pt : threads) {
+    if (pt.pid = getpid()) {
+      int shmid = shmget(pt.shm.key, pt.shm.size, IPC_CREAT);
+      nodeInstance = (Node*) shmat(shmid,(void*)0,0);
+    }
+  };
+  // YOU SHOULD HANDLE HERE
+
+  // [END] YOU SHOULD HANDLE HERE
   // detach from shared memory
-  shmdt(data);
+  shmdt(nodeInstance);
 };
