@@ -14,7 +14,7 @@ hdls assumes that you're an experienced programmer (you're using a headless modi
 
 #### Signal Mapping
 
-Headless uses ints mapped to void functions taking a Concord/Node instance to set up signal handling. You can use this format to customize your headless implementation.
+*Incomplete*
 
 ---
 

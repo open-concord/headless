@@ -36,9 +36,13 @@ void Worker(key_t key) {
   act.sa_flags = SA_SIGINFO; // ask for siginfo
 
   // establish shm + store pid in shm
-  int shmid = shmget(key, sizeof(&pid) /** change this to actual max size */, IPC_CREAT);
+  int shmid = shmget(key, sizeof(&pid), IPC_CREAT);
   pid_t *shmptr = (pid_t *) shmat(shmid, NULL, 0);
   *shmptr = pid;
+
+  // document info in mem
+  sigMap[key].self.shmid = shmid;
+  sigMap[key].self.size = sizeof(&pid);
 
   // finally just running a Node instance
 

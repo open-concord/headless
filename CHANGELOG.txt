@@ -1,3 +1,18 @@
 - 09/12/21
   - header is updated w/ data storage
   - implementation is partially updated ^
+- 09/13/21
+  - threading should work
+  - data storage still incomplete, prototype attached below
+    - {
+        123456789 /** pid (accessible to caller) */ : {
+          self /** pid (accessible to thread) */: {
+              shmid: 0987654321,
+              size: 1024
+            },
+            sigHndl /** (signals mapped to handle function) */: {
+              0: void(*handle)(Node)
+            }
+          }
+        }
+      }
