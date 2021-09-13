@@ -3,17 +3,18 @@
 * It's recommended that you write the thread # out to a file,
 * otherwise you risk memory leaks
 *
-* Calling Spawn(#) will create a headless node with the shm key'd to #
-* Calling Stop(#) will FORCEFULLY stop the headless node with # pid
-* Calling Send(#, #') will send process # the signal #' (Should be used to close Nodes)
+* Calling Spawn(key_t) will create a headless node with the specified shm
+* Calling Stop(pid_t) will FORCEFULLY stop the headless node with # pid
+* Calling Send(pid_t, int) will send the signal int (Should be used to close Nodes)
 */
 
 #include "hdls.hpp"
 
 void Spawn(char kChar) {
   key_t key = ftok(".", kChar);
-  std::thread threadObj(new Worker, key);
-  threadObj.detach();
+
+  std::thread(&Handle, key).detach();
+  exit(0);
 };
 
 void Send(pid_t pid, int sig) {
@@ -24,27 +25,31 @@ void Stop(pid_t pid) {
   kill(pid, SIGQUIT);
 };
 
-Worker::Worker(key_t key) {
+void Worker(key_t key) {
   // set pid
-  this->pid = getpid();
+  pid_t pid = getpid();
 
   // binding sigaction
   struct sigaction act;
   std::memset(&act, '\0', sizeof(act));
-  act.sa_sigaction = &Worker::Handle;
+  act.sa_sigaction = Handle;
   act.sa_flags = SA_SIGINFO; // ask for siginfo
 
   // establish shm + store pid in shm
-  int shmid = shmget(key, sizeof(&this->pid), IPC_CREAT);
+  int shmid = shmget(key, sizeof(&pid) /** change this to actual max size */, IPC_CREAT);
   pid_t *shmptr = (pid_t *) shmat(shmid, NULL, 0);
-  *shmptr = this->pid;
+  *shmptr = pid;
 
   // finally just running a Node instance
 
 };
 
-void Worker::Handle(int sig, siginfo_t *siginfo, void *context) {
-  std::cout << "SIGNAL RECIEVED" << "\n";
-  std::cout << "GET own PID: " << (long)siginfo->si_pid << "\n";
-  std::cout << "GET own UID: " << (long)siginfo->si_uid << "\n";
+static void Handle(int sig, siginfo_t *siginfo, void *context) {
+  // pulling the data
+  int shmid = shmget(sigMap[sig].info.key, sigMap[sig].info.size, IPC_CREAT);
+  Node *data = (Node*) shmat(shmid,(void*)0,0);
+  // handling
+  sigMap[sig].handle(*data);
+  // detach from shared memory
+  shmdt(data);
 };
