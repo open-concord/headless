@@ -10,10 +10,14 @@
 
 #include "hdls.hpp"
 
+// CONFIG //
+size_t threadNum; // number of concerrent threads to run
+size_t threadAlloc; // memory to alloc per-thread
+// [END] CONFIG //
+
 void Spawn(char kChar) {
   key_t key = ftok(".", kChar);
-
-  std::thread(&Handle, key).detach();
+  std::thread(&Worker, key).detach();
   exit(0);
 };
 
@@ -35,32 +39,39 @@ void Worker(key_t key) {
   act.sa_sigaction = Handle;
   act.sa_flags = SA_SIGINFO; // ask for siginfo
 
-  // establish shm
-  auto threads[key].shm = selfSHM; // shortcut
-  int shmid = shmget(key, selfSHM.size, IPC_CREAT);
-  // storing PID in shm, so that the calling process call log it
-  pid_t *shmptr = (pid_t *) shmat(shmid, NULL, 0);
-  *shmptr = pid;
+  // establish shm<pid>
+  int oid = shmget(std::to_string(pid), threadAlloc, IPC_CREAT);
 
-  // document info in mem
-  threads[key].pid = pid;
+  // log to shm<key>
+  int lid = shmget(
+    key,
+    // each stringified PID is 32 bytes
+    (32*threadNum)
+  );
+  ledger *lptr = (ledger *) shmat(lid, NULL, 0);
+  for (var i=0; i<threadNum; i++) {
+    if(*lptr[i] == "00000") {
+      *lptr[i] = std::to_string(pid);
+      return;
+    };
+  };
+  // detaching from shm
+  shmdt(lptr);
 
   // finally just running a Node instance
+  thread *optr = (thread *) shmat(oid, NULL, 0);
 
 };
 
 static void Handle(int sig, siginfo_t *siginfo, void *context) {
   // pulling the data
-  Node *nodeInstance;
-  for (auto const& pt : threads) {
-    if (pt.pid = getpid()) {
-      int shmid = shmget(pt.shm.key, pt.shm.size, IPC_CREAT);
-      nodeInstance = (Node*) shmat(shmid,(void*)0,0);
-    }
-  };
+  std::string mem = std::to_string(getpid());
+  int shmid = shmget(mem, threadAlloc);
+  // get content
+  thread *content = (auto*) shmat(shmid, NULL, 0);
   // YOU SHOULD HANDLE HERE
 
   // [END] YOU SHOULD HANDLE HERE
   // detach from shared memory
-  shmdt(nodeInstance);
+  shmdt(content);
 };

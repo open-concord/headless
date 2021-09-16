@@ -15,17 +15,14 @@
 #include <concord/Node.h>
 
 /** mapping */
-// template
+// template [per-thread] (right now pretty barren)
 struct thread {
-  pid_t pid;
-  struct shm {
-    key_t key;
-    size_t size;
-  };
   *Node node;
 };
-// actual mapping
-std::map<key_t, thread> threads;
+// template [thread ledger]
+//std::array<std::string, threadNum> ledger;
+//ledger.fill("00000")
+
 
 /** Exposed Functions */
 void Spawn(char kChar);
