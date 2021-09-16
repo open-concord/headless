@@ -3,7 +3,7 @@
 #include <iostream>
 #include <map>
 #include <string>
-#include <vector>
+#include <unordered_set>
 /** unix */
 #include <cstring> // memset
 #include <unistd.h> // pid
@@ -20,7 +20,7 @@ struct nodeCfg {
   int queue;
   unsigned short int port;
   std::map<std::string, Tree> cm;
-  (void*)(blocks_cb)(std::unordered_st<std::string>);
+  (void*)(blocks_cb)(std::unordered_set<std::string>);
 }
 
 /** mapping */
