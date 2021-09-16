@@ -3,7 +3,7 @@
 * It's recommended that you write the thread # out to a file,
 * otherwise you risk memory leaks
 *
-* Calling Spawn(key_t) will create a headless node with the specified shm
+* Calling Spawn(key_t, nodeCfg) will create a headless node
 * Calling Stop(pid_t) will FORCEFULLY stop the headless node with # pid
 * Calling Send(pid_t, int) will send the signal int (Should be used to close Nodes)
 */
@@ -11,13 +11,13 @@
 #include "hdls.hpp"
 
 // CONFIG //
-size_t threadNum; // number of concerrent threads to run
-size_t threadAlloc; // memory to alloc per-thread
+unsigned int threadNum; // number of concerrent threads to run
+size_t threadAlloc; // memory to alloc per-thread [bytes]
 // [END] CONFIG //
 
-void Spawn(char kChar) {
+void Spawn(char kChar, nodeCfg cfg) {
   key_t key = ftok(".", kChar);
-  std::thread(&Worker, key).detach();
+  std::thread(&Worker, key, cfg).detach();
   exit(0);
 };
 
@@ -83,7 +83,6 @@ static void Handle(int sig, siginfo_t *siginfo, void *context) {
     case 10: // 10 is just a placeholder, but it's our graceful kill function for now
       *self.node::close();
       break;
-
     default: // missing signal????
       std::cout << "Non-Handled Signal Recieved : " << sig << "\n";
       break;

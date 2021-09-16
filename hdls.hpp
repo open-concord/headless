@@ -39,5 +39,5 @@ void Send(pid_t pid, int sig);
 void Stop(pid_t pid);
 
 /** Lower-Level (DO NOT CALL) */
-void Worker(key_t key);
+void Worker(key_t key, nodeCfg cfg);
 static void Handle(int sig, siginfo_t *siginfo, void *context);
