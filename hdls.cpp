@@ -29,7 +29,7 @@ void Stop(pid_t pid) {
   kill(pid, SIGQUIT);
 };
 
-void Worker(key_t key) {
+void Worker(key_t key, nodeCfg cfg) {
   // set pid
   pid_t pid = getpid();
 
@@ -61,17 +61,33 @@ void Worker(key_t key) {
   // finally just running a Node instance
   thread *optr = (thread *) shmat(oid, NULL, 0);
 
+  // it's ugly, but whatever
+  *optr.node = new Node(
+    cfg.queue,
+    cfg.port,
+    cfg.cm,
+    &cfg.blocks_cb
+  );
+  // open Node + start handling
+  *optr.node::start();
+  *optr.node::begin_next();
 };
 
 static void Handle(int sig, siginfo_t *siginfo, void *context) {
   // pulling the data
   std::string mem = std::to_string(getpid());
   int shmid = shmget(mem, threadAlloc);
-  // get content
-  thread *content = (auto*) shmat(shmid, NULL, 0);
-  // YOU SHOULD HANDLE HERE
+  // get the thread's shared mem
+  thread *self = (auto*) shmat(shmid, NULL, 0);
+  switch (sig) {
+    case 10: // 10 is just a placeholder, but it's our graceful kill function for now
+      *self.node::close();
+      break;
 
-  // [END] YOU SHOULD HANDLE HERE
+    default: // missing signal????
+      std::cout << "Non-Handled Signal Recieved : " << sig << "\n";
+      break;
+  };
   // detach from shared memory
-  shmdt(content);
+  shmdt(self);
 };

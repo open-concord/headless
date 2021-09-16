@@ -13,6 +13,15 @@
 #include <sys/types.h> // key (needed for shared mem mapping) (UNIX)
 /** concord */
 #include <concord/Node.h>
+#include <concord/Tree.h>
+
+/** node config */
+struct nodeCfg {
+  int queue;
+  unsigned short int port;
+  std::map<std::string, Tree> cm;
+  (void*)(blocks_cb)(std::unordered_st<std::string>);
+}
 
 /** mapping */
 // template [per-thread] (right now pretty barren)
