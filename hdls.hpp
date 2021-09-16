@@ -34,7 +34,7 @@ struct thread {
 
 
 /** Exposed Functions */
-void Spawn(char kChar);
+void Spawn(char kChar, nodeCfg cfg);
 void Send(pid_t pid, int sig);
 void Stop(pid_t pid);
 
