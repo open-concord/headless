@@ -20,7 +20,7 @@
 /** mapping */
 // template [per-thread] (right now pretty barren)
 struct thread {
-  Node (*node);
+  Node node;
 };
 
 /** Exposed Functions */
@@ -29,23 +29,24 @@ void Spawn(
   int lid,
   size_t lsize,
   /** node config */
-  int nqueue,
+  std::reference_wrapper<int> nqueue,
   unsigned short int nport,
   std::map<std::string, Tree> ncm,
   boost::function<void (std::unordered_set<std::string>)> nblocks_cb
 );
+
 void Send(pid_t pid, int sig);
 void Stop(pid_t pid);
 
 /** Lower-Level (DO NOT CALL) */
 void Worker(
   /** ledger config */
-  key_t lkey,
-  size_t lsize,
+  std::reference_wrapper<key_t> lkey,
+  std::reference_wrapper<size_t> lsize,
   /** node config */
-  int nqueue,
-  unsigned short int nport,
-  std::map<std::string, Tree> ncm,
-  boost::function<void (std::unordered_set<std::string>)> nblocks_cb
+  std::reference_wrapper<int> nqueue,
+  std::reference_wrapper<unsigned short int> nport,
+  std::reference_wrapper<std::map<std::string, Tree>> ncm,
+  std::reference_wrapper<boost::function<void (std::unordered_set<std::string>)>> nblocks_cb
 );
 static void Handle(int sig, siginfo_t *siginfo, void *context);

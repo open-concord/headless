@@ -1,4 +1,4 @@
-/**
+ /**
 * Just thread locking and unlocking
 * It's recommended that you write the thread # out to a file,
 * otherwise you risk memory leaks
@@ -26,16 +26,16 @@ void Spawn(
   boost::function<void (std::unordered_set<std::string>)> nblocks_cb
 ) {
   key_t lkey = ftok(".", lid);
-  std::thread(
+  std::thread{
     &Worker,
     /** ledger config */
-    lkey, lsize,
+    std::ref(lkey), std::ref(lsize),
     /** node config */
-    nqueue,
-    nport,
-    ncm,
-    nblocks_cb
-    ).detach();
+    std::ref(nqueue),
+    std::ref(nport),
+    std::ref(ncm),
+    std::ref(nblocks_cb)
+  }.detach();
   // exit(0)
 };
 
@@ -49,12 +49,13 @@ void Stop(pid_t pid) {
 
 void Worker(
   /** ledger config */
-  key_t lkey, size_t lsize,
+  std::reference_wrapper<key_t> lkey,
+  std::reference_wrapper<size_t> lsize,
   /** node config */
-  int nqueue,
-  unsigned short int nport,
-  std::map<std::string, Tree> ncm,
-  boost::function<void (std::unordered_set<std::string>)> nblocks_cb
+  std::reference_wrapper<int> nqueue,
+  std::reference_wrapper<unsigned short int> nport,
+  std::reference_wrapper<std::map<std::string, Tree>> ncm,
+  std::reference_wrapper<boost::function<void (std::unordered_set<std::string>)>> nblocks_cb
 ) {
   // binding sigaction
   struct sigaction act;
@@ -79,15 +80,15 @@ void Worker(
   shmat(oid, optr, 0);
 
   // it's ugly, but whatever
-  (*optr).node = new Node (
-    nqueue,
-    nport,
-    ncm,
-    &nblocks_cb
+  (*optr).node(
+    nqueue.get(),
+    nport.get(),
+    ncm.get(),
+    nblocks_cb.get()
   );
   // open Node + start handling
-  (*optr).node->start();
-  (*optr).node->begin_next();
+  (*optr).node.start();
+  (*optr).node.begin_next();
 };
 
 static void Handle(int sig, siginfo_t *siginfo, void *context) {
@@ -100,7 +101,7 @@ static void Handle(int sig, siginfo_t *siginfo, void *context) {
 
   switch (sig) {
     case 10: // 10 is just a placeholder, but it's our graceful kill function for now
-      (*self).node->close();
+      (*self).node.stop();
       break;
     default: // missing signal????
       std::cout << "Non-Handled Signal Recieved : " << sig << "\n";

@@ -13,7 +13,9 @@ std::vector<unsigned int> ledger;
 // temp map
 std::map<std::string, Tree> tm;
 // temp func
-boost::function<void (std::unordered_set<std::string>)> bcb;
+boost::function<void (std::unordered_set<std::string>)> bcb {
+  //sugma
+};
 
 int main (int argc, char** argv) { // 0 to kill, 1 to spawn
   std::cout << argv[1] << "\n";
