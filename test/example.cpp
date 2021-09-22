@@ -5,20 +5,16 @@
 #include <string>
 
 #include <stdlib.h> // strtol
-// g++ -std=c++20 test/example.cpp -lconcord -lcrypto
-// ^ from root
+// g++ src/hdls.hpp src/hdls.cpp src/filler.cpp test/example.cpp -o test.out -lpthread
+// ^ from project root
 
 std::vector<unsigned int> ledger;
 
-// temp map
-std::map<std::string, Tree> tm;
-// temp func
-boost::function<void (std::unordered_set<std::string>)> bcb {
-  //sugma
-};
+// dummy config
+config cfg = {6};
 
 int main (int argc, char** argv) { // 0 to kill, 1 to spawn
-  std::cout << argv[1] << "\n";
+  std::cout << "CMD: " << argv[1] << "\n";
   char *temp;
   long cmd = strtol(argv[1], &temp, 10);
   switch (cmd) {
@@ -39,10 +35,7 @@ int main (int argc, char** argv) { // 0 to kill, 1 to spawn
           /** ledger */
           1337, 288, /** 32 bytes per PID, 3 nodes = 288 bytes*/
           /** node */
-          8,
-          (133+i),
-          tm,
-          bcb
+          cfg
         );
       };
       break;
