@@ -1,19 +1,16 @@
 #include "hdls.hpp"
 
-void Spawn(
-  /** pid for the caller*/
-  std::vector<int> ledger,
+int Spawn(
   /** thread config (contains node config) */
   config cfg
 ) {
-  std::thread{
-    &Worker,
-    /** ledger */
-    std::ref(ledger),
-    /** <filler> node config */
-    cfg
-  }.detach();
-  // exit(0)
+  pid_t pid;
+  pid = fork();
+  if (pid > 0) {
+    return pid; // parent
+  }
+  Worker(cfg);
+  return 0; // child
 };
 
 void Send(pid_t pid, int sig) {
@@ -35,11 +32,10 @@ int _keying(const char* k, std::size_t s) {
 };
 
 void Worker(
-  /** pid for the caller*/
-  std::vector<int>& ledger,
   /** filler config (contains node config) */
   config cfg
 ) {
+
   // binding sigaction
   struct sigaction act;
   std::memset(&act, '\0', sizeof(act));
@@ -62,10 +58,6 @@ void Worker(
       // error
     };
   } catch (...) {/** ISO C++ forbids comparison between pointer and integer */}
-  
-  // update ledger
-  std::cout << "Now setting pid" << "\n";
-  ledger.push_back(getpid());
 
   // finally just running a Node instance
   wptr->Start();
@@ -94,11 +86,12 @@ static void Handle(int sig, siginfo_t *siginfo, void *context) {
       shm_unlink(std::to_string(getpid()).c_str()); // remove shm
       break;
     default: // missing signal????
-      std::cout << "Non-Handled Signal Recieved : " << sig << "\n";
       break;
   };
   // detach from shm
   if (munmap(wptr, alloc) < 0) {
     // error
+    exit(1);
   };
+  exit(0);
 };

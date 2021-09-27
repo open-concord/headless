@@ -32,13 +32,17 @@ struct config {
   int fint;
 };
 
+// config for thread info
+struct thread {
+  int pid;
+  bool done = false;
+};
+
 // config for individual node memory allocation
 #define alloc 4096 // 4kb for testing
 
 /** Exposed Functions */
-void Spawn(
-  /** pid for the caller*/
-  std::vector<int> ledger,
+int Spawn(
   /** thread config (contains node config) */
   config cfg
 );
@@ -48,8 +52,6 @@ void Stop(pid_t pid);
 
 /** Lower-Level */
 void Worker(
-  /** pid for the caller*/
-  std::vector<int>& ledger,
   /** thread config (contains node config) */
   config cfg
 );
