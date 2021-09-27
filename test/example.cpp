@@ -8,7 +8,7 @@
 // g++ src/hdls.hpp src/hdls.cpp src/filler.cpp test/example.cpp -o test.out -lpthread
 // ^ from project root
 
-std::vector<unsigned int> ledger;
+std::vector<int> ledger;
 
 // dummy config
 config cfg = {6};
@@ -18,25 +18,32 @@ int main (int argc, char** argv) { // 0 to kill, 1 to spawn
   char *temp;
   long cmd = strtol(argv[1], &temp, 10);
   switch (cmd) {
-    case 0:
+    case 0: // kill all
     { // explicit wrapping
-        int lid = shmget(1337, 288, 0);
-        std::vector<unsigned int> *lptr;
-        shmat(lid, lptr, 0);
-        for (int i=0; i<lptr->size();i++) {
-          Send(lptr->at(i), 10);
+      for (int i=0; i<ledger.size(); i++) {
+        Send(ledger.at(i), 10);
       };
       break;
     }
-    case 1:
+    case 1: // create
     { // explicit wrapping
+      std::cout << "Spawn called" << "\n";
       for (int i=0; i<3; i++) {
         Spawn(
           /** ledger */
-          1337, 288, /** 32 bytes per PID, 3 nodes = 288 bytes*/
+          ledger,
           /** node */
           cfg
         );
+      };
+      break;
+    }
+    case 2: // output ledger in mem
+    { // explicit wrapping
+      std::cout << "SIZE: "<< ledger.size() << "\n";
+      for (int i=0; i<ledger.size(); i++) {
+        std::cout << "Test" << "\n";
+        std::cout << ledger.at(i) << "\n";
       };
       break;
     }
