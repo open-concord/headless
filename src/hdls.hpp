@@ -1,6 +1,7 @@
 /** std */
 #include <thread>
 #include <iostream>
+#include <fstream>
 #include <map>
 #include <string>
 #include <unordered_set>
@@ -45,8 +46,5 @@ void Send(pid_t pid, int sig);
 void Stop(pid_t pid);
 
 /** Lower-Level */
-void Worker(
-  /** thread config (contains node config) */
-  config cfg
-);
-static void Handle(int sig, siginfo_t *siginfo, void *context);
+void Worker(config cfg);
+void Handle(int sig);

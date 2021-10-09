@@ -1,4 +1,5 @@
 #include "hdls.hpp"
+#include <fstream>
 
 int Spawn(
   /** thread config (contains node config) */
@@ -39,8 +40,7 @@ void Worker(
   // binding sigaction
   struct sigaction act;
   std::memset(&act, '\0', sizeof(act));
-  act.sa_sigaction = &Handle;
-  act.sa_flags = SA_SIGINFO; // ask for siginfo
+  act.sa_handler = static_cast<void(*)(int)>(&Handle); // NOTE[u2on] = fix static_cast when i'm lucid
 
   // map worker shm to process [wptr]
   Filler wf(3);
@@ -63,7 +63,7 @@ void Worker(
   wptr->Start();
 };
 
-static void Handle(int sig, siginfo_t *siginfo, void *context) {
+void Handle(int sig) {
   // map worker shm to process [wptr]
   Filler *wptr;
   wptr = static_cast<Filler*>(mmap(
@@ -75,23 +75,22 @@ static void Handle(int sig, siginfo_t *siginfo, void *context) {
     0
   ));
   try {
-    if (wptr == MAP_FAILED) {
-      // error
-    };
-  } catch (...) {/** ISO C++ forbids comparison between pointer and integer */}
-  
+    if (wptr == MAP_FAILED) {/**error*/};
+  } catch (...) {/** ISO C++ forbids comparison between pointer and integer, eg. failed successfully */}
   switch (sig) {
     case 10: // 10 is just a placeholder, but it's our graceful kill function for now
-      wptr->Stop();
-      shm_unlink(std::to_string(getpid()).c_str()); // remove shm
-      break;
+      {
+        wptr->Stop();
+        shm_unlink(std::to_string(getpid()).c_str()); // remove shm
+        break;
+      }
     default: // missing signal????
-      break;
-  };
+      {break;}
+  }
   // detach from shm
   if (munmap(wptr, alloc) < 0) {
     // error
     exit(1);
   };
-  exit(0);
+  exit(sig);
 };
