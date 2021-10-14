@@ -1,96 +1,38 @@
-#include "hdls.hpp"
+#include "../inc/hdls.hpp"
 #include <fstream>
 
-int Spawn(
-  /** thread config (contains node config) */
-  config cfg
-) {
+
+int Spawn(config cfg) {
   pid_t pid;
-  pid = fork();
+  pid = fork(); // [u2on] need to make this multi-platform safe
   if (pid > 0) {
     return pid; // parent
   }
   Worker(cfg);
   return 0; // child
-};
+}
 
 void Send(pid_t pid, int sig) {
-  kill(pid, sig);
-};
+  _sigSend(pid, sig);
+}
 
 void Stop(pid_t pid) {
-  kill(pid, SIGQUIT);
-};
+  _sigSend(pid, 9);
+}
 
-/** convience method to reduce clutter */
-int _keying(const char* k, std::size_t s) {
-  // create shm, set size
-  int km = shm_open(k, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
-  if ((km || ftruncate(km, s)) < 0) {
-    return -1;
-  };
-  return km;
-};
-
-void Worker(
-  /** filler config (contains node config) */
-  config cfg
-) {
-
-  // binding sigaction
-  struct sigaction act;
-  std::memset(&act, '\0', sizeof(act));
-  act.sa_handler = static_cast<void(*)(int)>(&Handle); // NOTE[u2on] = fix static_cast when i'm lucid
-
-  // map worker shm to process [wptr]
-  Filler wf(3);
-  Filler* wptr = &wf;
-  wptr = static_cast<Filler*>(mmap(
-    NULL,
-    alloc,
-    PROT_READ | PROT_WRITE,
-    MAP_SHARED,
-    _keying(std::to_string(getpid()).c_str(), alloc),
-    0
-  ));
-  try {
-    if (wptr == MAP_FAILED) {
-      // error
-    };
-  } catch (...) {/** ISO C++ forbids comparison between pointer and integer */}
-
-  // finally just running a Node instance
-  wptr->Start();
-};
+void Worker(config cfg) {
+  _sigRegister(); // binding to SIGUSR1
+  Filler *wptr = shmAttach(cfg); // attach worker shm to process
+  wptr->Start(); // finally just running a Node instance
+}
 
 void Handle(int sig) {
-  // map worker shm to process [wptr]
-  Filler *wptr;
-  wptr = static_cast<Filler*>(mmap(
-    NULL,
-    alloc,
-    PROT_READ | PROT_WRITE,
-    MAP_SHARED,
-    _keying(std::to_string(getpid()).c_str(), alloc),
-    0
-  ));
-  try {
-    if (wptr == MAP_FAILED) {/**error*/};
-  } catch (...) {/** ISO C++ forbids comparison between pointer and integer, eg. failed successfully */}
-  switch (sig) {
-    case 10: // 10 is just a placeholder, but it's our graceful kill function for now
-      {
-        wptr->Stop();
-        shm_unlink(std::to_string(getpid()).c_str()); // remove shm
-        break;
-      }
-    default: // missing signal????
-      {break;}
-  }
-  // detach from shm
-  if (munmap(wptr, alloc) < 0) {
-    // error
-    exit(1);
-  };
+  Filler *wptr = shmAttach(std::nullopt); // attach worker shm to process
+  std::cout << "From within sig handler" << std::endl;
+  wptr->Stop();
+
+  shmDestory(std::to_string(_pid()).c_str()); // queue kernal to remove shm
+
+  shmDetach(wptr); // detach from shm
   exit(sig);
-};
+}

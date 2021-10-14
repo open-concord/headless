@@ -1,6 +1,0 @@
-# Moved to ROAD #
-
-Pre-Alpha:
-  - Spawn
-  - Send
-  - Kill

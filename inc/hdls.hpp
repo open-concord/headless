@@ -7,13 +7,8 @@
 #include <unordered_set>
 #include <vector>
 #include <memory>
-/** unix */
-#include <cstring> // memset
-#include <unistd.h> // pid
-#include <signal.h> // signal
-#include <sys/mman.h> // shared mem (UNIX)
-#include <sys/stat.h> // mode const (UNIX)
-#include <fcntl.h> // O_ const (UNIX)
+#include <optional>
+
 /** concord */
 //#include <concord/node.h>
 //#include <concord/tree.h>
@@ -22,6 +17,7 @@
 class Filler {
 private:
   int ft;
+  bool done;
 public:
   Filler(int fint);
   void Start();
@@ -37,10 +33,7 @@ struct config {
 #define alloc 4096 // 4kb for testing
 
 /** Exposed Functions */
-int Spawn(
-  /** thread config (contains node config) */
-  config cfg
-);
+int Spawn(config cfg);
 
 void Send(pid_t pid, int sig);
 void Stop(pid_t pid);
@@ -48,3 +41,12 @@ void Stop(pid_t pid);
 /** Lower-Level */
 void Worker(config cfg);
 void Handle(int sig);
+
+/** platform specific sysapi stuff */
+void _sigRegister();
+void _sigSend(int pid, int sig);
+int _keying();
+int _pid();
+Filler* shmAttach(std::optional<config> cfg);
+int shmDetach(Filler* ptr);
+void shmDestory(const char* target);
