@@ -5,20 +5,10 @@
 #include <unistd.h> // pid
 #include <signal.h> // signal
 #include <sys/mman.h> // shared mem
-#include <sys/stat.h> // mode const
 #include <fcntl.h> // O_ const
 
 void _sigRegister() {
-  signal(SIGUSR1, &Handle);
-  /*
-  struct sigaction act = {0};
-  act.sa_handler = &Handle;
-
-  if (sigaction(SIGUSR1, &act, NULL)<0) {
-    std::cout << "ERROR IN SIGACT" << std::endl;
-    exit(1);
-  }
-  */
+  signal(10, Handle);
 }
 
 void _sigSend(int pid, int sig) {

@@ -1,6 +1,4 @@
 #include "../inc/hdls.hpp"
-#include <fstream>
-
 
 int Spawn(config cfg) {
   pid_t pid;
@@ -30,7 +28,6 @@ void Handle(int sig) {
   Filler *wptr = shmAttach(std::nullopt); // attach worker shm to process
   std::cout << "From within sig handler" << std::endl;
   wptr->Stop();
-
   shmDestory(std::to_string(_pid()).c_str()); // queue kernal to remove shm
 
   shmDetach(wptr); // detach from shm
