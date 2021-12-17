@@ -6,7 +6,7 @@ Add hdls.hpp and hdls.cpp to your compile path. *If you move `hdls.hpp` to a loc
 
 
 ### notes
-hdls assumes that you're an experienced programmer (you're using a headless modified version for a distributed messaging protocal written in cpp lmao). Bad design utilizing hdls **can result in memory leaks**, check your code.
+hdls assumes that you're an experienced programmer (you're using a headless modified version for a distributed messaging protocol written in cpp lmao). Bad design utilizing hdls **can result in memory leaks**, check your code.
 
 ### usage
 **You should only be using the functions explicitly marked as exposed, use of the underlying functions may result in unintended behavior**
